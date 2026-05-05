@@ -1,10 +1,3 @@
-# ============================================================================
-# MULTI-STAGE DOCKERFILE - SIMPLIFIED FOR LARAVEL 8 API
-# ============================================================================
-# 4 Stages: builder, development, staging, production
-# Build: docker build --target=development -t laravel:dev .
-# ============================================================================
-
 # STAGE 1: BUILDER (Shared dependencies)
 FROM php:8.1-fpm-alpine AS builder
 
@@ -19,9 +12,7 @@ RUN docker-php-ext-install pdo_mysql
 # Copy application code
 COPY . .
 
-# ============================================================================
-# STAGE 2: DEVELOPMENT (With debug tools)
-# ============================================================================
+#dev
 FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
@@ -42,10 +33,7 @@ ENV APP_DEBUG=true
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
-
-# ============================================================================
-# STAGE 3: STAGING (Optimized, production-like)
-# ============================================================================
+#staging
 FROM php:8.1-fpm-alpine AS staging
 
 WORKDIR /app
@@ -67,9 +55,7 @@ ENV APP_DEBUG=false
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
 
-# ============================================================================
-# STAGE 4: PRODUCTION (Minimal, secure, optimized)
-# ============================================================================
+#prod
 FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
