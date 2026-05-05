@@ -229,6 +229,31 @@ RUN docker-php-ext-install opcache  # Performance
 
 ---
 
+## Cloud Run Deployment
+
+### Live Service
+```
+URL: https://laravel-api-184947282681.us-central1.run.app
+Health Check: /health.php
+Environment: Production
+```
+
+### Health Check
+```bash
+curl https://laravel-api-184947282681.us-central1.run.app/health.php
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "environment": "production",
+  "timestamp": "2026-05-05T20:55:47+00:00"
+}
+```
+
+---
+
 ## Deploy to Production
 
 ### 1. Build production image
