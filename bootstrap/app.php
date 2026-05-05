@@ -9,4 +9,17 @@ $app->singleton(
     App\Http\Kernel::class
 );
 
+$app->singleton(
+    Illuminate\Contracts\Console\Kernel::class,
+    App\Console\Kernel::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Exceptions\Handler::class,
+    App\Exceptions\Handler::class
+);
+
+// Register service providers
+$app->register(App\Providers\RouteServiceProvider::class);
+
 return $app;

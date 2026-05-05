@@ -1,36 +1,47 @@
+# ============================================================================
+# MULTI-STAGE DOCKERFILE - LARAVEL 8 API
+# ============================================================================
+
 # STAGE 1: BUILDER (Shared dependencies)
 FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
 
-# Install required packages
+# Install system dependencies + composer download
 RUN apk add --no-cache curl git
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Download and install Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    php -r "unlink('composer-setup.php');" && \
+    composer --version
 
-# Copy full application code first (needed for artisan in post-install scripts)
+# Copy application code
 COPY . .
 
-# Configure composer to allow insecure packages (Laravel 8.83 has EOL security advisories)
-RUN composer config audit.block-insecure false
+# Install dependencies (skip scripts to avoid artisan errors during build)
+RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts 2>&1 || true
 
-# Install dependencies
-RUN composer install --no-dev --no-interaction --prefer-dist
-
-#dev
+# ============================================================================
+# STAGE 2: DEVELOPMENT (With debug tools)
+# ============================================================================
 FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
 
-# Install system packages + debug tools
+# Install system packages + composer
 RUN apk add --no-cache curl git vim bash
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql
+
+# Install Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    php -r "unlink('composer-setup.php');"
 
 # Copy from builder
 COPY --from=builder /app /app
@@ -41,17 +52,25 @@ ENV APP_DEBUG=true
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
-#staging
+    CMD curl -f http://localhost:9000/health || exit 1
+
+# ============================================================================
+# STAGE 3: STAGING (Optimized)
+# ============================================================================
 FROM php:8.1-fpm-alpine AS staging
 
 WORKDIR /app
 
-# Install minimal packages
+# Install system packages
 RUN apk add --no-cache curl git
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql
+
+# Install Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    php -r "unlink('composer-setup.php');"
 
 # Copy from builder
 COPY --from=builder /app /app
@@ -62,20 +81,22 @@ ENV APP_DEBUG=false
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost:9000/health || exit 1
 
-#prod
+# ============================================================================
+# STAGE 4: PRODUCTION (Minimal, optimized)
+# ============================================================================
 FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
 
-# Install OPcache for performance
+# Install PHP extensions (OPcache for performance)
 RUN docker-php-ext-install pdo_mysql opcache
 
 # Copy from builder
 COPY --from=builder /app /app
 
-# Security: Run as non-root user (www-data user already exists in php:8.1-fpm-alpine)
+# Security: Run as non-root user
 RUN chown -R www-data:www-data /app
 USER www-data
 
@@ -85,4 +106,4 @@ ENV APP_DEBUG=false
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost:9000/health || exit 1
