@@ -3,14 +3,23 @@ FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
 
-# Install minimal required packages
+# Install required packages
 RUN apk add --no-cache curl git
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql
 
-# Copy application code
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Copy full application code first (needed for artisan in post-install scripts)
 COPY . .
+
+# Configure composer to allow insecure packages (Laravel 8.83 has EOL security advisories)
+RUN composer config audit.block-insecure false
+
+# Install dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist
 
 #dev
 FROM php:8.1-fpm-alpine AS development
