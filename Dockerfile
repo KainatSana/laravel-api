@@ -1,7 +1,11 @@
 # ============================================================================
-# CLOUD RUN - Single container with Nginx + PHP-FPM
+# MULTI-STAGE DOCKERFILE - Laravel 8 API
+# Build: docker build --target=development -t laravel:dev .
+#        docker build --target=staging -t laravel:staging .
+#        docker build --target=production -t laravel:prod .
 # ============================================================================
 
+# STAGE 1: BUILDER (Shared dependencies)
 FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
@@ -19,27 +23,76 @@ COPY . .
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts 2>&1 || true
 
 # ============================================================================
-FROM php:8.1-fpm-alpine
+# STAGE 2: DEVELOPMENT (With debug tools, Nginx on port 8080)
+# ============================================================================
+FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
 
-# Install Nginx
-RUN apk add --no-cache nginx
+RUN apk add --no-cache curl git vim bash nginx
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql opcache
+RUN docker-php-ext-install pdo_mysql
 
-# Copy from builder
 COPY --from=builder /app /app
 
-# Copy Nginx config
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
-# Copy startup script
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
+RUN mkdir -p /var/log/nginx && \
+    chown -R www-data:www-data /app /var/log/nginx /var/lib/nginx
 
-# Create nginx log directory
+ENV APP_ENV=local
+ENV APP_DEBUG=true
+ENV PORT=8080
+
+EXPOSE 8080
+
+USER www-data
+
+CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
+
+# ============================================================================
+# STAGE 3: STAGING (Optimized, production-like)
+# ============================================================================
+FROM php:8.1-fpm-alpine AS staging
+
+WORKDIR /app
+
+RUN apk add --no-cache curl git nginx
+
+RUN docker-php-ext-install pdo_mysql
+
+COPY --from=builder /app /app
+
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+RUN mkdir -p /var/log/nginx && \
+    chown -R www-data:www-data /app /var/log/nginx /var/lib/nginx
+
+ENV APP_ENV=staging
+ENV APP_DEBUG=false
+ENV PORT=8080
+
+EXPOSE 8080
+
+USER www-data
+
+CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
+
+# ============================================================================
+# STAGE 4: PRODUCTION (Minimal, optimized, secure)
+# ============================================================================
+FROM php:8.1-fpm-alpine AS production
+
+WORKDIR /app
+
+RUN apk add --no-cache nginx
+
+RUN docker-php-ext-install pdo_mysql opcache
+
+COPY --from=builder /app /app
+
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
 RUN mkdir -p /var/log/nginx && \
     chown -R www-data:www-data /app /var/log/nginx /var/lib/nginx
 
@@ -51,4 +104,4 @@ EXPOSE 8080
 
 USER www-data
 
-CMD ["/usr/local/bin/start.sh"]
+CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"

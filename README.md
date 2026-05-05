@@ -130,13 +130,13 @@ DB_PASSWORD=laravel_password
 ### Build individual stages:
 
 ```bash
-# Development
+# Development (with debug tools)
 docker build --target=development -t laravel:dev .
 
-# Staging
+# Staging (optimized, production-like)
 docker build --target=staging -t laravel:staging .
 
-# Production
+# Production (minimal, optimized)
 docker build --target=production -t laravel:prod .
 ```
 
@@ -148,9 +148,24 @@ docker images laravel:*
 Expected:
 ```
 REPOSITORY  TAG        SIZE
-laravel     dev        ~600MB
-laravel     staging    ~450MB
-laravel     prod       ~400MB
+laravel     dev        ~175MB
+laravel     staging    ~129MB
+laravel     prod       ~118MB
+```
+
+### Test locally:
+```bash
+# Development
+docker run -p 8080:8080 laravel:dev
+
+# Staging
+docker run -p 8080:8080 laravel:staging
+
+# Production
+docker run -p 8080:8080 laravel:prod
+
+# In another terminal:
+curl http://localhost:8080/health.php
 ```
 
 ---
