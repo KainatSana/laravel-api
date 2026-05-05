@@ -238,7 +238,7 @@ Health Check: /health.php
 Environment: Production
 ```
 
-### Health Check
+### Test Health Check
 ```bash
 curl https://laravel-api-184947282681.us-central1.run.app/health.php
 ```
@@ -250,6 +250,35 @@ Expected response:
   "environment": "production",
   "timestamp": "2026-05-05T20:55:47+00:00"
 }
+```
+
+### Deploy Your Own Instance
+
+1. **Build Docker image**
+```bash
+docker build -f Dockerfile.cloudrun -t laravel:cloudrun .
+```
+
+2. **Push to Google Artifact Registry**
+```bash
+docker tag laravel:cloudrun us-central1-docker.pkg.dev/YOUR_PROJECT_ID/laravel-api/laravel:latest
+docker push us-central1-docker.pkg.dev/YOUR_PROJECT_ID/laravel-api/laravel:latest
+```
+
+3. **Deploy to Cloud Run**
+```bash
+gcloud run deploy laravel-api \
+  --image=us-central1-docker.pkg.dev/YOUR_PROJECT_ID/laravel-api/laravel:latest \
+  --region=us-central1 \
+  --allow-unauthenticated \
+  --timeout=300 \
+  --memory=512Mi
+```
+
+4. **Test deployment**
+```bash
+SERVICE_URL=$(gcloud run services describe laravel-api --region=us-central1 --format="get(status.url)")
+curl $SERVICE_URL/health.php
 ```
 
 ---
