@@ -1,11 +1,4 @@
-# ============================================================================
-# MULTI-STAGE DOCKERFILE - Laravel 8 API
-# Build: docker build --target=development -t laravel:dev .
-#        docker build --target=staging -t laravel:staging .
-#        docker build --target=production -t laravel:prod .
-# ============================================================================
-
-# STAGE 1: BUILDER (Shared dependencies)
+# STAGE 1: BUILDER 
 FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
@@ -22,9 +15,7 @@ COPY . .
 
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts 2>&1 || true
 
-# ============================================================================
-# STAGE 2: DEVELOPMENT (With debug tools, Nginx on port 8080)
-# ============================================================================
+# development
 FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
@@ -50,9 +41,7 @@ USER www-data
 
 CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
 
-# ============================================================================
-# STAGE 3: STAGING (Optimized, production-like)
-# ============================================================================
+# Staging
 FROM php:8.1-fpm-alpine AS staging
 
 WORKDIR /app
@@ -78,9 +67,7 @@ USER www-data
 
 CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
 
-# ============================================================================
-# STAGE 4: PRODUCTION (Minimal, optimized, secure)
-# ============================================================================
+# Prod
 FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
