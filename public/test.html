@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel API - Test UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value {
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-unhealthy {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .buttons-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-small {
+            grid-column: 1 / -1;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #dee2e6;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #555;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .env-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        .env-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .env-item:last-child {
+            border-bottom: none;
+        }
+
+        .env-key {
+            font-weight: 600;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .env-value {
+            color: #666;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            max-width: 300px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .buttons-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Laravel API Test</h1>
+        <p class="subtitle">Health Check & Database Status</p>
+
+        <!-- Status Section -->
+        <div class="status-section">
+            <div class="status-item">
+                <span class="status-label">Status</span>
+                <span id="statusBadge" class="badge badge-info">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Environment</span>
+                <span id="environmentValue" class="status-value">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Database</span>
+                <span id="databaseBadge" class="badge badge-info">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Updated</span>
+                <span id="lastUpdated" class="status-value">-</span>
+            </div>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="buttons-section">
+            <button class="btn-primary" onclick="testHealth()">Test Health</button>
+            <button class="btn-primary" onclick="testDatabase()">Test Database</button>
+            <button class="btn-secondary btn-small" onclick="autoRefresh()">Auto Refresh (30s)</button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultSection" class="result-section">
+            <div class="result-title">Response:</div>
+            <div id="resultContent" class="result-content"></div>
+        </div>
+
+        <!-- Environment Variables Display -->
+        <div class="env-display">
+            <div style="font-weight: 600; margin-bottom: 10px; color: #333;">Environment Variables:</div>
+            <div id="envDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load environment variables
+        function loadEnvDisplay() {
+            const envDisplay = document.getElementById('envDisplay');
+            const envVars = [
+                { key: 'APP_ENV', description: 'Application environment' },
+                { key: 'APP_KEY', description: 'Encryption key (set)' },
+                { key: 'DB_HOST', description: 'Database host' },
+                { key: 'DB_DATABASE', description: 'Database name' },
+                { key: 'DB_CONNECTION', description: 'Database driver' }
+            ];
+
+            envDisplay.innerHTML = envVars.map(env => `
+                <div class="env-item">
+                    <span class="env-key">${env.key}</span>
+                    <span class="env-value" title="${env.description}">${env.description}</span>
+                </div>
+            `).join('');
+        }
+
+        // Test health endpoint
+        async function testHealth() {
+            showLoading(true);
+            try {
+                const response = await fetch('/health.php');
+                const data = await response.json();
+
+                displayResult('Health Check', data);
+                updateStatus(data);
+
+            } catch (error) {
+                displayError('Health Check Failed', error.message);
+            }
+            showLoading(false);
+        }
+
+        // Test database connection
+        async function testDatabase() {
+            showLoading(true);
+            try {
+                const response = await fetch('/health.php');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    displayResult('Database Connection', {
+                        status: data.status,
+                        message: 'Database is connected and responding',
+                        environment: data.environment,
+                        timestamp: data.timestamp
+                    });
+                    updateStatus(data);
+                } else {
+                    displayResult('Database Connection', {
+                        status: data.status,
+                        error: data.error || 'Database connection failed'
+                    });
+                }
+            } catch (error) {
+                displayError('Database Test Failed', error.message);
+            }
+            showLoading(false);
+        }
+
+        // Update status display
+        function updateStatus(data) {
+            const statusBadge = document.getElementById('statusBadge');
+            const databaseBadge = document.getElementById('databaseBadge');
+            const environmentValue = document.getElementById('environmentValue');
+            const lastUpdated = document.getElementById('lastUpdated');
+
+            if (data.status === 'healthy') {
+                statusBadge.className = 'badge badge-healthy';
+                statusBadge.textContent = '✓ Healthy';
+                databaseBadge.className = 'badge badge-healthy';
+                databaseBadge.textContent = '✓ Connected';
+            } else {
+                statusBadge.className = 'badge badge-unhealthy';
+                statusBadge.textContent = '✗ Unhealthy';
+                databaseBadge.className = 'badge badge-unhealthy';
+                databaseBadge.textContent = '✗ Disconnected';
+            }
+
+            environmentValue.textContent = data.environment || '-';
+
+            const now = new Date();
+            lastUpdated.textContent = now.toLocaleTimeString();
+        }
+
+        // Display result
+        function displayResult(title, data) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultContent.textContent = JSON.stringify(data, null, 2);
+            resultSection.classList.add('show');
+        }
+
+        // Display error
+        function displayError(title, error) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultContent.innerHTML = `<span style="color: red;">✗ Error: ${error}</span>`;
+            resultSection.classList.add('show');
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            const container = document.querySelector('.container');
+            if (show) {
+                container.classList.add('loading');
+            } else {
+                container.classList.remove('loading');
+            }
+        }
+
+        // Auto refresh
+        function autoRefresh() {
+            const interval = setInterval(() => {
+                testHealth();
+            }, 30000);
+
+            alert('Auto-refresh enabled every 30 seconds. Refresh page to stop.');
+        }
+
+        // Load on page load
+        window.addEventListener('load', () => {
+            loadEnvDisplay();
+            testHealth();
+        });
+    </script>
+</body>
+</html>

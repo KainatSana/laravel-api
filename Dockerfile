@@ -1,4 +1,4 @@
-# STAGE 1: BUILDER 
+# Stage 1: BUILDER - Install dependencies once
 FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
@@ -15,12 +15,12 @@ COPY . .
 
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts 2>&1 || true
 
-# development
+# Stage 2: DEVELOPMENT - For local development with debug tools
 FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
 
-RUN apk add --no-cache curl git vim bash nginx
+RUN apk add --no-cache vim bash nginx
 
 RUN docker-php-ext-install pdo_mysql
 
@@ -41,12 +41,12 @@ USER www-data
 
 CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
 
-# Staging
+# Stage 3: STAGING - Production-like testing environment
 FROM php:8.1-fpm-alpine AS staging
 
 WORKDIR /app
 
-RUN apk add --no-cache curl git nginx
+RUN apk add --no-cache nginx
 
 RUN docker-php-ext-install pdo_mysql
 
@@ -67,7 +67,7 @@ USER www-data
 
 CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
 
-# Prod
+# Stage 4: PRODUCTION 
 FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
