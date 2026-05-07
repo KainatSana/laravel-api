@@ -72,7 +72,7 @@ FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
 
-RUN apk add --no-cache nginx google-cloud-cli
+RUN apk add --no-cache nginx curl jq
 
 RUN docker-php-ext-install pdo_mysql opcache
 
