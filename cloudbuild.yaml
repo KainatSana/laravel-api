@@ -9,10 +9,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest']
 
-  - name: 'gcr.io/cloud-builders/gke-deploy'
+  - name: 'gcr.io/cloud-builders/gcloud'
     args: ['run', 'deploy', 'laravel-api', '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '--region=us-central1', '--allow-unauthenticated']
 
 timeout: '1800s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 images:
   - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'
