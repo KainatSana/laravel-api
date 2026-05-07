@@ -67,28 +67,33 @@ USER www-data
 
 CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
 
-# Stage 4: PRODUCTION 
+# Stage 4: PRODUCTION
 FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
 
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx google-cloud-cli
 
 RUN docker-php-ext-install pdo_mysql opcache
 
 COPY --from=builder /app /app
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p /var/log/nginx && \
     chown -R www-data:www-data /app /var/log/nginx /var/lib/nginx
 
 ENV APP_ENV=production
 ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stackdriver
 ENV PORT=8080
 
 EXPOSE 8080
 
 USER www-data
 
-CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["sh", "-c", "php-fpm -D && exec nginx -g 'daemon off;'"]

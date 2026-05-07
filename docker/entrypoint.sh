@@ -15,4 +15,3 @@ fi
 php artisan migrate --force
 php artisan config:cache
 exec php-fpm
-ENTRYPOINT
