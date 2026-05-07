@@ -1,0 +1,19 @@
+# PROD PIPELINE - Tag-based (version tags only)
+# Triggers on: git tag v1.0.0 && git push origin v1.0.0
+# Controlled, manual production releases
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '--target=production', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}']
+
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    args: ['run', 'deploy', 'laravel-api', '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}', '--region=us-central1', '--allow-unauthenticated', '--update-env-vars=APP_ENV=production,APP_DEBUG=false']
+
+timeout: '1800s'
+
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'

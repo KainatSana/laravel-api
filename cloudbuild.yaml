@@ -1,59 +1,19 @@
+# DEV PIPELINE - Branch-based (main branch)
+# Triggers on: git push origin main
+# Auto-deploys to production every push
+
 steps:
-  # Step 1: Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'build'
-    args:
-      - 'build'
-      - '--target=production'
-      - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${SHORT_SHA}'
-      - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'
-      - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${_ENVIRONMENT}'
-      - '.'
+    args: ['build', '--target=production', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:dev-${SHORT_SHA}', '.']
 
-  # Step 2: Push image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push'
-    args:
-      - 'push'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${SHORT_SHA}'
+    args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest']
 
-  # Step 3: Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gke-deploy'
-    id: 'deploy'
-    args:
-      - 'run'
-      - 'deploy'
-      - '${_SERVICE_NAME}'
-      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${SHORT_SHA}'
-      - '--region=${_REGION}'
-      - '--allow-unauthenticated'
-      - '--set-env-vars=APP_ENV=${_ENVIRONMENT},APP_DEBUG=${_APP_DEBUG},DB_CONNECTION=mysql,DB_HOST=${_DB_HOST},DB_PORT=3306,DB_DATABASE=laravel,DB_USERNAME=laravel_user,LOG_CHANNEL=stackdriver'
-      - '--set-secrets=APP_KEY=laravel-app-key:latest,DB_PASSWORD=laravel-db-password:latest'
-
-  # Step 4: Run health check test
-  - name: 'gcr.io/cloud-builders/gke-deploy'
-    id: 'test'
-    args:
-      - 'run'
-      - 'describe'
-      - '${_SERVICE_NAME}'
-      - '--region=${_REGION}'
-
-substitutions:
-  _REGION: 'us-central1'
-  _ENVIRONMENT: 'dev'  # Override with 'prod' for production builds
-  _SERVICE_NAME: 'laravel-api'
-  _APP_DEBUG: 'false'
-  _DB_HOST: 'watchful-force-495414-t4:us-east4:pitcrew-db-dev'
-
-images:
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${SHORT_SHA}'
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'
+    args: ['run', 'deploy', 'laravel-api', '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '--region=us-central1', '--allow-unauthenticated']
 
 timeout: '1800s'
 
-options:
-  machineType: 'N1_HIGHCPU_8'
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:dev-${SHORT_SHA}'
