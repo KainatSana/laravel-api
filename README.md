@@ -214,7 +214,7 @@ docker-compose exec mysql mysql -u laravel_user -p laravel
 ### Stage 1: Builder
 ```dockerfile
 FROM php:8.1-fpm-alpine AS builder
-# Installs dependencies once
+
 # Other stages copy from here
 ```
 
