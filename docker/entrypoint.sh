@@ -33,8 +33,12 @@ else
   export DB_PASSWORD="laravel_password"
 fi
 
-echo "[$(date)] Running database migrations..."
-php artisan migrate --force || echo "[$(date)] WARNING: Migrations failed or already applied"
+if [ "$SKIP_MIGRATIONS" != "true" ]; then
+  echo "[$(date)] Running database migrations..."
+  php artisan migrate --force || echo "[$(date)] WARNING: Migrations failed or already applied"
+else
+  echo "[$(date)] Skipping migrations (SKIP_MIGRATIONS=true)"
+fi
 
 echo "[$(date)] Caching Laravel configuration..."
 php artisan config:cache
