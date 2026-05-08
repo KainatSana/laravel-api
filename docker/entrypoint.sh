@@ -24,7 +24,7 @@ echo "[INIT] ✓ Nginx config valid"
 
 # Start PHP-FPM in daemon mode
 echo "[INIT] Starting PHP-FPM (daemon mode)..."
-php-fpm -D
+php-fpm -c /usr/local/etc/php-fpm.conf -D
 sleep 1
 
 # Verify PHP-FPM started

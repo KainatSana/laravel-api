@@ -82,11 +82,12 @@ COPY --from=builder /app /app
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN mkdir -p /var/log/nginx && \
-    chown -R www-data:www-data /app /var/log/nginx /var/lib/nginx
+RUN mkdir -p /var/log/nginx /var/log/php-fpm /var/run/php-fpm && \
+    chown -R www-data:www-data /app /var/log/nginx /var/log/php-fpm /var/lib/nginx
 
 ENV APP_ENV=production
 ENV APP_DEBUG=false
