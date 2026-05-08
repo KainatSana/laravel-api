@@ -2,6 +2,12 @@
 # Triggers on: git tag v1.0.0 && git push origin v1.0.0
 # Controlled, manual production releases
 
+substitutions:
+  _DB_HOST: "watchful-force-495414-t4:us-east4:pitcrew-db-prod"
+  _DB_NAME: "laravel"
+  _DB_USER: "laravel_user"
+  _APP_KEY: "base64:xIIBXqpGxb9O8VGYvZWZq/SkXQDNKSJpLIhLVwuJaPI="
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '--target=production', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '.']
@@ -10,7 +16,12 @@ steps:
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}']
 
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['run', 'deploy', 'laravel-api', '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}', '--region=us-central1', '--allow-unauthenticated', '--update-env-vars=APP_ENV=production,APP_DEBUG=false']
+    args: ['run', 'deploy', 'laravel-api',
+           '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}',
+           '--region=us-central1',
+           '--allow-unauthenticated',
+           '--service-account=cloud-build-sa@${PROJECT_ID}.iam.gserviceaccount.com',
+           '--update-env-vars=APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stackdriver,DB_CONNECTION=mysql,DB_HOST=${_DB_HOST},DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_USERNAME=${_DB_USER},APP_KEY=${_APP_KEY}']
 
 timeout: '1800s'
 
