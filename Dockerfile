@@ -81,7 +81,7 @@ RUN docker-php-ext-install pdo_mysql opcache
 COPY --from=builder /app /app
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY docker/php-fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
