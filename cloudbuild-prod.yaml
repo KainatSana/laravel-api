@@ -21,8 +21,7 @@ steps:
            '--region=us-central1',
            '--allow-unauthenticated',
            '--service-account=cloud-build-sa@${PROJECT_ID}.iam.gserviceaccount.com',
-           '--clear-secrets',
-           '--update-env-vars=APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stackdriver,DB_CONNECTION=mysql,DB_HOST=${_DB_HOST},DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_USERNAME=${_DB_USER},APP_KEY=${_APP_KEY}']
+           '--set-env-vars=APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stackdriver,DB_CONNECTION=mysql,DB_HOST=${_DB_HOST},DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_USERNAME=${_DB_USER},APP_KEY=${_APP_KEY}']
 
 timeout: '1800s'
 
