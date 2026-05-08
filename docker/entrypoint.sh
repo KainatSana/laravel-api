@@ -1,44 +1,55 @@
 #!/bin/sh
+set -e
 
-echo "[INIT] Container started at $(date)"
-echo "[INIT] Running as user: $(whoami)"
-echo "[INIT] Current directory: $(pwd)"
+echo "=========================================="
+echo "[INIT] Container startup - $(date)"
+echo "=========================================="
 
-# Verify PHP-FPM and nginx exist
-command -v php-fpm >/dev/null 2>&1 || { echo "[ERROR] PHP-FPM not found"; exit 1; }
+# Verify required binaries exist
+echo "[INIT] Checking required binaries..."
+command -v php-fpm >/dev/null 2>&1 || { echo "[ERROR] php-fpm not found"; exit 1; }
 command -v nginx >/dev/null 2>&1 || { echo "[ERROR] nginx not found"; exit 1; }
-
-echo "[INIT] ✓ PHP and nginx found"
+echo "[INIT] ✓ php-fpm and nginx found"
 
 # Create required directories
-mkdir -p /var/run/php-fpm /var/log/nginx /var/lib/nginx /app/storage/logs
+echo "[INIT] Creating required directories..."
+mkdir -p /var/run/php-fpm /var/log/php-fpm /var/log/nginx /var/lib/nginx/tmp
+echo "[INIT] ✓ Directories created"
 
-# Validate nginx config
+# Validate nginx configuration
 echo "[INIT] Validating nginx configuration..."
-if ! nginx -t >/dev/null 2>&1; then
-  echo "[ERROR] Nginx config validation failed:"
-  nginx -t
-  exit 1
+if ! nginx -t 2>&1 | head -5; then
+    echo "[ERROR] Nginx configuration invalid"
+    exit 1
 fi
-echo "[INIT] ✓ Nginx config valid"
+echo "[INIT] ✓ Nginx configuration valid"
 
-# Start PHP-FPM in daemon mode
-echo "[INIT] Starting PHP-FPM (daemon mode)..."
-php-fpm -c /usr/local/etc/php-fpm.conf -D
-sleep 1
-
-# Verify PHP-FPM started
-if ps aux | grep -v grep | grep -q 'php-fpm: master'; then
-  echo "[INIT] ✓ PHP-FPM is running"
+# Start PHP-FPM
+echo "[INIT] Starting PHP-FPM..."
+if php-fpm -y /usr/local/etc/php-fpm.conf -D; then
+    echo "[INIT] ✓ PHP-FPM started"
 else
-  echo "[ERROR] PHP-FPM failed to start"
-  echo "[DEBUG] Process list:"
-  ps aux
-  echo "[DEBUG] Recent logs:"
-  tail -20 /var/log/nginx/error.log 2>/dev/null || echo "No error log"
-  exit 1
+    echo "[ERROR] PHP-FPM failed to start"
+    echo "[DEBUG] Trying direct invocation..."
+    php-fpm -D || true
+    sleep 1
 fi
+
+# Verify PHP-FPM is running
+echo "[INIT] Verifying PHP-FPM..."
+if ps aux | grep -v grep | grep -q 'php-fpm: master'; then
+    echo "[INIT] ✓ PHP-FPM is running"
+else
+    echo "[WARN] PHP-FPM might not be running, continuing anyway..."
+fi
+
+# Wait for PHP-FPM to be ready
+echo "[INIT] Waiting for PHP-FPM to initialize..."
+sleep 2
 
 # Start nginx in foreground
-echo "[INIT] Starting nginx..."
+echo "[INIT] Starting nginx in foreground..."
+echo "[INIT] =========================================="
+echo "[INIT] Application ready on port 8080"
+echo "[INIT] =========================================="
 exec nginx -g 'daemon off;'

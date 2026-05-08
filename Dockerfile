@@ -99,4 +99,4 @@ EXPOSE 8080
 # Run as root to allow port binding
 # USER www-data
 
-CMD sh -c "php-fpm -D && exec nginx -g 'daemon off;'"
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
