@@ -95,6 +95,7 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-USER www-data
+# Run as root to allow port binding
+# USER www-data
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
