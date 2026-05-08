@@ -1,53 +1,44 @@
 #!/bin/sh
-set -e
 
 echo "[INIT] Container started at $(date)"
 echo "[INIT] Running as user: $(whoami)"
 echo "[INIT] Current directory: $(pwd)"
-echo "[INIT] PHP version: $(php -v | head -n1)"
 
-# Check if PHP-FPM exists
-if ! command -v php-fpm > /dev/null 2>&1; then
-  echo "[ERROR] PHP-FPM NOT found"
-  exit 1
-fi
-echo "[INIT] ✓ PHP-FPM found"
+# Verify PHP-FPM and nginx exist
+command -v php-fpm >/dev/null 2>&1 || { echo "[ERROR] PHP-FPM not found"; exit 1; }
+command -v nginx >/dev/null 2>&1 || { echo "[ERROR] nginx not found"; exit 1; }
 
-# Check if nginx exists
-if ! command -v nginx > /dev/null 2>&1; then
-  echo "[ERROR] Nginx NOT found"
-  exit 1
-fi
-echo "[INIT] ✓ Nginx found"
+echo "[INIT] ✓ PHP and nginx found"
 
-# Validate nginx configuration
+# Create required directories
+mkdir -p /var/run/php-fpm /var/log/nginx /var/lib/nginx /app/storage/logs
+
+# Validate nginx config
 echo "[INIT] Validating nginx configuration..."
-if ! nginx -t 2>&1; then
-  echo "[ERROR] Nginx configuration validation failed"
+if ! nginx -t >/dev/null 2>&1; then
+  echo "[ERROR] Nginx config validation failed:"
+  nginx -t
   exit 1
 fi
-echo "[INIT] ✓ Nginx configuration valid"
+echo "[INIT] ✓ Nginx config valid"
 
-# Ensure log directories exist and are writable
-mkdir -p /var/log/nginx /var/run/php-fpm
-chmod 755 /var/log/nginx /var/run/php-fpm
+# Start PHP-FPM in daemon mode
+echo "[INIT] Starting PHP-FPM (daemon mode)..."
+php-fpm -D
+sleep 1
 
-# Start PHP-FPM in background (non-daemon mode, but in background)
-echo "[INIT] Starting PHP-FPM..."
-php-fpm -F &
-FPM_PID=$!
-echo "[INIT] PHP-FPM started with PID $FPM_PID"
-
-# Wait for PHP-FPM to be ready
-sleep 2
-
-# Check if PHP-FPM is still running
-if ! kill -0 $FPM_PID 2>/dev/null; then
-  echo "[ERROR] PHP-FPM failed to start or exited immediately"
+# Verify PHP-FPM started
+if ps aux | grep -v grep | grep -q 'php-fpm: master'; then
+  echo "[INIT] ✓ PHP-FPM is running"
+else
+  echo "[ERROR] PHP-FPM failed to start"
+  echo "[DEBUG] Process list:"
+  ps aux
+  echo "[DEBUG] Recent logs:"
+  tail -20 /var/log/nginx/error.log 2>/dev/null || echo "No error log"
   exit 1
 fi
-echo "[INIT] ✓ PHP-FPM is running"
 
-# Start nginx in foreground (this will block, keeping container alive)
-echo "[INIT] Starting Nginx in foreground..."
+# Start nginx in foreground
+echo "[INIT] Starting nginx..."
 exec nginx -g 'daemon off;'
