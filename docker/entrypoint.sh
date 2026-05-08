@@ -39,5 +39,10 @@ php artisan migrate --force || echo "[$(date)] WARNING: Migrations failed or alr
 echo "[$(date)] Caching Laravel configuration..."
 php artisan config:cache
 
-echo "[$(date)] Laravel initialization complete - starting PHP-FPM"
-exec php-fpm
+echo "[$(date)] Laravel initialization complete - starting services"
+# Start PHP-FPM in background
+php-fpm -D
+
+# Start Nginx in foreground (this becomes the main process)
+echo "[$(date)] Starting Nginx on port 8080"
+exec nginx -g 'daemon off;'
