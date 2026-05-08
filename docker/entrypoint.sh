@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "[$(date)] Entrypoint script started"
+echo "[$(date)] Bash version: $BASH_VERSION"
+echo "[$(date)] Working directory: $(pwd)"
+echo "[$(date)] USER: $(whoami)"
 echo "[$(date)] Starting Laravel container initialization..."
 
 # Don't exit on error - we want to start Nginx even if secrets fail
@@ -67,9 +71,20 @@ echo "[$(date)] Caching Laravel configuration..."
 php artisan config:cache
 
 echo "[$(date)] Laravel initialization complete - starting services"
-# Start PHP-FPM in background
+
+echo "[$(date)] Checking if php-fpm exists..."
+which php-fpm && echo "[$(date)] php-fpm found" || echo "[$(date)] ERROR: php-fpm NOT found"
+
+echo "[$(date)] Checking if nginx exists..."
+which nginx && echo "[$(date)] nginx found" || echo "[$(date)] ERROR: nginx NOT found"
+
+echo "[$(date)] Starting PHP-FPM in background..."
 php-fpm -D
+FPM_PID=$!
+echo "[$(date)] PHP-FPM started with PID: $FPM_PID"
 
 # Start Nginx in foreground (this becomes the main process)
-echo "[$(date)] Starting Nginx on port 8080"
+echo "[$(date)] Starting Nginx on port 8080..."
+echo "[$(date)] About to execute: nginx -g 'daemon off;'"
 exec nginx -g 'daemon off;'
+echo "[$(date)] ERROR: This line should never be reached!"
