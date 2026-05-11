@@ -3,7 +3,7 @@ FROM php:8.1-fpm-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache curl git
+RUN apk add --no-cache curl git postgresql-dev
 
 RUN docker-php-ext-install pdo_pgsql
 
@@ -22,7 +22,7 @@ FROM php:8.1-fpm-alpine AS development
 
 WORKDIR /app
 
-RUN apk add --no-cache vim bash nginx
+RUN apk add --no-cache vim bash nginx postgresql-dev
 
 RUN docker-php-ext-install pdo_pgsql
 
@@ -48,7 +48,7 @@ FROM php:8.1-fpm-alpine AS staging
 
 WORKDIR /app
 
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx postgresql-dev
 
 RUN docker-php-ext-install pdo_pgsql
 
@@ -74,7 +74,7 @@ FROM php:8.1-fpm-alpine AS production
 
 WORKDIR /app
 
-RUN apk add --no-cache nginx curl jq
+RUN apk add --no-cache nginx curl jq postgresql-dev
 
 RUN docker-php-ext-install pdo_pgsql opcache
 
