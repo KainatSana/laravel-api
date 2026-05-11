@@ -103,7 +103,7 @@ curl http://localhost/health
 ### Services (docker-compose)
 - **Laravel App** (PHP-FPM) on port 9000
 - **Nginx** (Web server) on port 80
-- **MySQL** (Database) on port 3306
+- **PostgreSQL** (Database) on port 5432
 
 ### API Endpoints
 ```
@@ -116,8 +116,8 @@ GET  /api/v1/status ← API status
 ```
 APP_ENV=local|staging|production
 APP_DEBUG=true|false
-DB_CONNECTION=mysql
-DB_HOST=mysql (Docker hostname)
+DB_CONNECTION=pgsql
+DB_HOST=postgres (Docker hostname)
 DB_DATABASE=laravel
 DB_USERNAME=laravel_user
 DB_PASSWORD=laravel_password
@@ -204,7 +204,7 @@ docker-compose logs -f app
 docker-compose exec app php artisan config:cache
 
 # Access database
-docker-compose exec mysql mysql -u laravel_user -p laravel
+docker-compose exec postgres psql -U postgres -d laravel
 ```
 
 ---
@@ -388,7 +388,7 @@ docker-compose exec app php artisan key:generate
 [DONE] Performance optimization (OPcache)  
 [DONE] Docker Compose for local development  
 [DONE] Nginx reverse proxy  
-[DONE] MySQL database  
+[DONE] PostgreSQL database  
 
 ---
 
@@ -403,11 +403,11 @@ ports:
 
 ### Cannot connect to database
 ```bash
-# Check MySQL is running
+# Check PostgreSQL is running
 docker-compose ps
 
-# Restart MySQL
-docker-compose restart mysql
+# Restart PostgreSQL
+docker-compose restart postgres
 ```
 
 ### Composer permission denied
