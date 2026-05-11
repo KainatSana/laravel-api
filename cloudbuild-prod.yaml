@@ -10,7 +10,7 @@ substitutions:
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '--target=production', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '.']
+    args: ['build', '--target=production', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest', '.']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}']
@@ -21,7 +21,7 @@ steps:
            '--region=us-central1',
            '--allow-unauthenticated',
            '--service-account=cloud-build-sa@${PROJECT_ID}.iam.gserviceaccount.com',
-           '--update-env-vars=APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stackdriver,DB_CONNECTION=mysql,DB_HOST=${_DB_HOST},DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_USERNAME=${_DB_USER}',
+           '--update-env-vars=APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stackdriver,DB_CONNECTION=pgsql,DB_HOST=${_DB_HOST},DB_PORT=5432,DB_DATABASE=${_DB_NAME},DB_USERNAME=${_DB_USER}',
            '--set-secrets=APP_KEY=laravel-app-key:latest',
            '--set-secrets=DB_PASSWORD=laravel-db-password:latest']
 
@@ -31,5 +31,4 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:${TAG_NAME}'
   - 'us-central1-docker.pkg.dev/${PROJECT_ID}/pitcrew-repo-dev/laravel:latest'

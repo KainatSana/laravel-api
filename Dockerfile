@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN apk add --no-cache curl git
 
-RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_pgsql
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
@@ -24,7 +24,7 @@ WORKDIR /app
 
 RUN apk add --no-cache vim bash nginx
 
-RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_pgsql
 
 COPY --from=builder /app /app
 
@@ -50,7 +50,7 @@ WORKDIR /app
 
 RUN apk add --no-cache nginx
 
-RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_pgsql
 
 COPY --from=builder /app /app
 
@@ -76,7 +76,7 @@ WORKDIR /app
 
 RUN apk add --no-cache nginx curl jq
 
-RUN docker-php-ext-install pdo_mysql opcache
+RUN docker-php-ext-install pdo_pgsql opcache
 
 COPY --from=builder /app /app
 
